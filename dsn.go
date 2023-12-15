@@ -10,6 +10,7 @@ package mysql
 
 import (
 	"bytes"
+	"context"
 	"crypto/rsa"
 	"crypto/tls"
 	"errors"
@@ -63,6 +64,15 @@ type Config struct {
 	MultiStatements          bool // Allow multiple statements in one query
 	ParseTime                bool // Parse time values to time.Time
 	RejectReadOnly           bool // Reject read-only connections
+
+	// DialFunc specifies the dial function for creating connections.
+	// If DialFunc is nil, the connector will attempt to find a dial function from the global registry (registered with RegisterDialContext).
+	// If no dial function is found even after checking the global registry, the net.Dialer will be used as a fallback.
+	//
+	// The dial function is responsible for establishing connections. By providing a custom dial function,
+	// users can flexibly control the process of connection establishment. Custom dial functions can be registered in the global registry
+	// to tailor connection behavior according to specific requirements.
+	DialFunc func(ctx context.Context, network, addr string) (net.Conn, error)
 }
 
 // NewConfig creates a new Config and sets default values.

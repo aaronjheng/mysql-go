@@ -36,7 +36,16 @@ func (c *connector) Connect(ctx context.Context) (driver.Conn, error) {
 	dialsLock.RLock()
 	dial, ok := dials[mc.cfg.Net]
 	dialsLock.RUnlock()
-	if ok {
+
+	if c.cfg.DialFunc != nil {
+		dctx := ctx
+		if mc.cfg.Timeout > 0 {
+			var cancel context.CancelFunc
+			dctx, cancel = context.WithTimeout(ctx, c.cfg.Timeout)
+			defer cancel()
+		}
+		mc.netConn, err = c.cfg.DialFunc(dctx, mc.cfg.Net, mc.cfg.Addr)
+	} else if ok {
 		dctx := ctx
 		if mc.cfg.Timeout > 0 {
 			var cancel context.CancelFunc
